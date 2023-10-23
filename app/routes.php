@@ -13,7 +13,7 @@ return function (App $app) {
     $app->get('/transaksi', function(Request $request, Response $response){
         $db = $this->get(PDO::class);
 
-        $query = $db->query('SELECT * FROM transaksi');
+        $query = $db->query('CALL read_table_transaksi()');
         $results = $query->fetchAll(PDO::FETCH_ASSOC);
         $response->getBody()->write(json_encode($results));
 

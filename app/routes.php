@@ -69,14 +69,15 @@ return function (App $app) {
     
         return $response->withHeader("Content-Type", "application/json");
     });
-
+    
     $app->post('/karyawan', function(Request $request, Response $response) {
+        $db = $this->get(PDO::class);
+        $parseBody = $request->getParsedBody();
         try {
-            $parseBody = $request->getParsedBody();
             if (
                 empty($parseBody['id_laundry']) ||
                 empty($parseBody['nama']) ||
-                empty($parseBody['No_Telpon']) ||
+                empty($parseBody['no_telpon']) ||
                 empty($parseBody['alamat'])
             ) {
                 throw new Exception("Harap isi semua field.");
@@ -84,17 +85,51 @@ return function (App $app) {
     
             $idLaundry = $parseBody['id_laundry'];
             $nama = $parseBody['nama'];
-            $noTelpon = $parseBody['no_telepon'];
+            $noTelpon = $parseBody['no_telpon'];
             $alamat = $parseBody['alamat'];
     
-            $db = $this->get(PDO::class);
-            $query = $db->prepare('CALL insert_karyawan(?, ?, ?, ?)');
+            $query = $db->prepare('CALL insert_Karyawan(?, ?, ?, ?)');
     
             $query->execute([$idLaundry, $nama, $noTelpon, $alamat]);
     
-            $lastId = $idKaryawan;
+            $lastId = $db->lastInsertId();
     
             $response->getBody()->write(json_encode(['message' => 'Data Karyawan Tersimpan Dengan ID ' . $lastId]));
+    
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (Exception $e) {
+            $errorResponse = ['error' => $e->getMessage()];
+            $response = $response
+                ->withStatus(400)
+                ->withHeader('Content-Type', 'application/json');
+            $response->getBody()->write(json_encode($errorResponse));
+            return $response;
+        }
+    });
+
+    $app->post('/pelanggan', function(Request $request, Response $response) {
+        $db = $this->get(PDO::class);
+        $parseBody = $request->getParsedBody();
+        try {
+            if (
+                empty($parseBody['nama']) ||
+                empty($parseBody['no_telpon']) ||
+                empty($parseBody['alamat'])
+            ) {
+                throw new Exception("Harap isi semua field.");
+            }
+    
+            $nama = $parseBody['nama'];
+            $noTelpon = $parseBody['no_telpon'];
+            $alamat = $parseBody['alamat'];
+    
+            $query = $db->prepare('CALL insert_Pelanggan(?, ?, ?)');
+    
+            $query->execute([$nama, $noTelpon, $alamat]);
+    
+            $lastId = $db->lastInsertId();
+    
+            $response->getBody()->write(json_encode(['message' => 'Data pelanggan Tersimpan Dengan ID ' . $lastId]));
     
             return $response->withHeader('Content-Type', 'application/json');
         } catch (Exception $e) {
@@ -181,6 +216,35 @@ return function (App $app) {
         
         return $response->withHeader("Content-Type", "application/json");
     });
+
+    $app->post('/new_pelanggan', function (Request $request, Response $response) {
+        $parsedBody = $request->getParsedBody();
+    
+        $idpelanggan = $parsedBody["id_pelanggan"];
+        $nama = $parsedBody["nama"];
+        $notelpon = $parsedBody["no_telepon"];
+        $alamat = $parsedBody["alamat"];
+    
+        $db = $this->get(PDO::class);
+    
+        try {
+            $query = $db->prepare('CALL insert_pelanggan(?, ?, ?, ?)');
+            $query->execute([$idpelanggan, $nama, $notelpon, $alamat]);
+    
+            $responseData = [
+                'message' => 'Data new_pelanggan disimpan.'
+            ];
+    
+            $response->getBody()->write(json_encode($responseData));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+        } catch (\Exception $e) {
+            $responseData = [
+                'error' => 'Terjadi kesalahan dalam penyimpanan data new_pelanggan.'
+            ];
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    });
+
 
         
 };

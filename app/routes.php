@@ -70,61 +70,117 @@ return function (App $app) {
         return $response->withHeader("Content-Type", "application/json");
     });
 
-    $app->post('/insert_karyawan', function (Request $request, Response $response, $args) {
-        $parsedBody = $request->getParsedBody();
+    $app->post('/karyawan', function(Request $request, Response $response) {
+        try {
+            $parseBody = $request->getParsedBody();
+            if (
+                empty($parseBody['id_laundry']) ||
+                empty($parseBody['nama']) ||
+                empty($parseBody['No_Telpon']) ||
+                empty($parseBody['alamat'])
+            ) {
+                throw new Exception("Harap isi semua field.");
+            }
     
-        $id_laundry = $parsedBody['id_laundry'];
-        $nama = $parsedBody['nama'];
-        $no_telepon = $parsedBody['no_telepon'];
-        $alamat = $parsedBody['alamat'];
+            $idLaundry = $parseBody['id_laundry'];
+            $nama = $parseBody['nama'];
+            $noTelpon = $parseBody['no_telepon'];
+            $alamat = $parseBody['alamat'];
     
-        
-        $sql = "INSERT INTO karyawan (id_laundry, nama, no_telepon, alamat) VALUES (:id_laundry, :nama, :no_telepon, :alamat)";
-        $stmt = $this->post('db')->prepare($sql);
-        $stmt->bindParam(':id_laundry', $id_laundry);
-        $stmt->bindParam(':nama', $nama);
-        $stmt->bindParam(':no_telepon', $no_telepon);
-        $stmt->bindParam(':alamat', $alamat);
+            $db = $this->get(PDO::class);
+            $query = $db->prepare('CALL insert_karyawan(?, ?, ?, ?)');
     
-        if ($stmt->execute()) {
-            $data = [
-                'status' => 'Data karyawan berhasil ditambahkan'
-            ];
-            return $response->withJson($data, 201);
-        } else {
-            $data = [
-                'status' => 'Gagal menambahkan data karyawan'
-            ];
-            return $response->withJson($data, 500);
+            $query->execute([$idLaundry, $nama, $noTelpon, $alamat]);
+    
+            $lastId = $idKaryawan;
+    
+            $response->getBody()->write(json_encode(['message' => 'Data Karyawan Tersimpan Dengan ID ' . $lastId]));
+    
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (Exception $e) {
+            $errorResponse = ['error' => $e->getMessage()];
+            $response = $response
+                ->withStatus(400)
+                ->withHeader('Content-Type', 'application/json');
+            $response->getBody()->write(json_encode($errorResponse));
+            return $response;
         }
     });
 
-    $app->post('/insert_karyawan', function (Request $request, Response $response) {
-        $parsedBody = $request->getParsedBody();
-    
-        $id_karyawan = $parsedBody["id_karyawan"];
-        $id_laundry = $parsedBody["id_laundry"];
-        $nama = $parsedBody["nama"];
-        $no_telepon = $parsedBody["no_telepon"];
-        $alamat = $parsedBody["alamat"];
-    
+    // delete
+
+    $app->delete('/transaksi/{id_transaksi}', function (Request $request, Response $response, $args) {
+        $currentId = $args['id_transaksi'];
         $db = $this->get(PDO::class);
-    
+        
         try {
-            $query = $db->prepare('CALL insert_karyawan(?, ?, ?)');
-            $query->execute([$name, $address, $city]);
-    
-            $responseData = [
-                'message' => 'karyawan disimpan.'
-            ];
-    
-            $response->getBody()->write(json_encode($responseData));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-        } catch (\Exception $e) {
-            $responseData = [
-                'error' => 'Terjadi kesalahan dalam penyimpanan karyawan.'
-            ];
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+            $query = $db->prepare('CALL delete_from_transaksi(?)');
+            $query->bindParam(1, $currentId, PDO::PARAM_INT);
+            $query->execute();
+        
+            if ($query->rowCount() === 0) {
+                $response = $response->withStatus(404);
+                $response->getBody()->write(json_encode(
+                    [
+                        'message' => 'transaksi dengan ID ' . $currentId . ' tidak ditemukan'
+                    ]
+                ));
+            } else {
+                $response->getBody()->write(json_encode(
+                    [
+                        'message' => 'transaksi dengan ID ' . $currentId . ' telah dihapus dari database'
+                    ]
+                ));
+            }
+        } catch (PDOException $e) {
+            $response = $response->withStatus(500);
+            $response->getBody()->write(json_encode(
+                [
+                    'message' => 'Database error ' . $e->getMessage()
+                ]
+            ));
         }
+        
+        return $response->withHeader("Content-Type", "application/json");
     });
+
+    $app->put('/karyawan/{id_karyawan}', function (Request $request, Response $response, $args) {
+        $parsedBody = $request->getParsedBody();
+         
+        $idkaryawan = $args['id_karyawan'];
+        $idlaundry = $parsedBody['id_laundry'];
+        $nama = $parsedBody['nama'];
+        $notelpon = $parsedBody['no_telepon'];
+        $alamat = $parsedBody['alamat'];
+
+        $db = $this->get(PDO::class);
+        
+        $query = $db->prepare('CALL update_karyawan(?, ?, ?, ?, ?)');
+        $query->bindParam(1, $idkaryawan, PDO::PARAM_INT);
+        $query->bindParam(2, $idlaundry, PDO::PARAM_INT);
+        $query->bindParam(3, $nama, PDO::PARAM_STR);
+        $query->bindParam(4, $notelpon, PDO::PARAM_STR);
+        $query->bindParam(5, $alamat, PDO::PARAM_STR);
+     
+  
+        $query->execute();
+        
+        if ($query) {
+            $response->getBody()->write(json_encode(
+                [
+                    'message' => 'karyawan dengan id ' . $idkaryawan . ' telah diupdate'
+                ]
+            ));
+        } else {
+            $response->getBody()->write(json_encode(
+                [
+                    'message' => 'Gagal mengupdate karyawan dengan id ' . $idkaryawan
+                ]
+            ));
+        }
+        
+        return $response->withHeader("Content-Type", "application/json");
+    });
+
+        
 };

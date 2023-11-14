@@ -20,12 +20,47 @@ return function (App $app) {
         return $response->withHeader("Content-Type", "application/json");
     });
 
+    $app->get('/laundry/{id}', function (Request $request, Response $response, $args) {
+        $db = $this->get(PDO::class);
+        
+        $id_laundry = $args['id'];
+        
+        $stmt = $db->prepare("CALL read_laundry_by_id(:id_laundry)");
+        $stmt->bindParam(':id_laundry', $id_laundry, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $response->getBody()->write(json_encode($result));
+
+        return $response->withHeader("Content-Type", "application/json");
+    });
+
+
     $app->get('/transaksi', function(Request $request, Response $response){
         $db = $this->get(PDO::class);
 
         $query = $db->query('CALL read_table_transaksi()');
         $results = $query->fetchAll(PDO::FETCH_ASSOC);
         $response->getBody()->write(json_encode($results));
+
+        return $response->withHeader("Content-Type", "application/json");
+    });
+
+    $app->get('/transaksi/{id}', function (Request $request, Response $response, $args) {
+        $db = $this->get(PDO::class);
+        
+        $id_transaksi = $args['id'];
+        
+        $stmt = $db->prepare("CALL read_transaksi_by_id(:id_transaksi)");
+        $stmt->bindParam(':id_transaksi', $id_transaksi, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $response->getBody()->write(json_encode($result));
 
         return $response->withHeader("Content-Type", "application/json");
     });
@@ -41,6 +76,24 @@ return function (App $app) {
         return $response->withHeader("Content-Type", "application/json");
     });
 
+    $app->get('/karyawan/{id}', function (Request $request, Response $response, $args) {
+        $db = $this->get(PDO::class);
+        
+        $id_karyawan = $args['id'];
+        
+        $stmt = $db->prepare("CALL read_karyawan_by_id(:id_karyawan)");
+        $stmt->bindParam(':id_karyawan', $id_karyawan, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $response->getBody()->write(json_encode($result));
+
+        return $response->withHeader("Content-Type", "application/json");
+    });
+
+
     $app->get('/paket', function(Request $request, Response $response){
         $db = $this->get(PDO::class);
 
@@ -51,12 +104,46 @@ return function (App $app) {
         return $response->withHeader("Content-Type", "application/json");
     });
 
+    $app->get('/paket/{id}', function (Request $request, Response $response, $args) {
+        $db = $this->get(PDO::class);
+        
+        $id_paket = $args['id'];
+        
+        $stmt = $db->prepare("CALL read_paket_by_id(:id_paket)");
+        $stmt->bindParam(':id_paket', $id_paket, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $response->getBody()->write(json_encode($result));
+
+        return $response->withHeader("Content-Type", "application/json");
+    });
+
     $app->get('/pelanggan', function(Request $request, Response $response){
         $db = $this->get(PDO::class);
 
         $query = $db->query('CALL read_table_pelanggan()');
         $results = $query->fetchAll(PDO::FETCH_ASSOC);
         $response->getBody()->write(json_encode($results));
+
+        return $response->withHeader("Content-Type", "application/json");
+    });
+
+    $app->get('/pelanggan/{id}', function (Request $request, Response $response, $args) {
+        $db = $this->get(PDO::class);
+        
+        $id_pelanggan = $args['id'];
+        
+        $stmt = $db->prepare("CALL read_pelanggan_by_id(:id_pelanggan)");
+        $stmt->bindParam(':id_pelanggan', $id_pelanggan, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $response->getBody()->write(json_encode($result));
 
         return $response->withHeader("Content-Type", "application/json");
     });

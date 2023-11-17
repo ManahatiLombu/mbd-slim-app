@@ -146,8 +146,8 @@ return function (App $app) {
         $response->getBody()->write(json_encode($result));
 
         return $response->withHeader("Content-Type", "application/json");
-    });
-
+    });  
+    
 // post
     $app->post('/laundry', function(Request $request, Response $response) {
         $db = $this->get(PDO::class);
@@ -524,8 +524,9 @@ return function (App $app) {
 
 // put
     $app->put('/laundry/{id_laundry}', function (Request $request, Response $response, $args) {
+        $idLaundry = $args['id_laundry'];
         $parsedBody = $request->getParsedBody();
-         
+        
         $nama = $parsedBody['nama'];
         $noTelpon = $parsedBody['no_telepon'];
         $alamat = $parsedBody['alamat'];
@@ -533,25 +534,25 @@ return function (App $app) {
 
         $db = $this->get(PDO::class);
         
-        $query = $db->prepare('CALL update_paket(?, ?, ?, ?)');
-        $query->bindParam(1, $nama, PDO::PARAM_STR);
-        $query->bindParam(2, $noTelpon, PDO::PARAM_STR);
-        $query->bindParam(3, $alamat, PDO::PARAM_STR);
-        $query->bindParam(4, $jenisLaundry, PDO::PARAM_STR);
-     
-  
+        $query = $db->prepare('CALL update_laundry(?, ?, ?, ?, ?)');
+        $query->bindParam(1, $idLaundry, PDO::PARAM_INT);
+        $query->bindParam(2, $nama, PDO::PARAM_STR);
+        $query->bindParam(3, $noTelpon, PDO::PARAM_STR);
+        $query->bindParam(4, $alamat, PDO::PARAM_STR);
+        $query->bindParam(5, $jenisLaundry, PDO::PARAM_STR);
+
         $query->execute();
         
         if ($query) {
             $response->getBody()->write(json_encode(
                 [
-                    'message' => 'laundry dengan id ' . $idlaundry . ' telah diupdate'
+                    'message' => 'laundry dengan id ' . $idLaundry . ' telah diupdate'
                 ]
             ));
         } else {
             $response->getBody()->write(json_encode(
                 [
-                    'message' => 'Gagal mengupdate laundry dengan id ' . $idpaket
+                    'message' => 'Gagal mengupdate laundry dengan id ' . $idLaundry
                 ]
             ));
         }
@@ -559,8 +560,10 @@ return function (App $app) {
         return $response->withHeader("Content-Type", "application/json");
     });
 
+
     
-    $app->put('/transaksi/{id_transak}', function (Request $request, Response $response, $args) {
+    $app->put('/transaksi/{id_transaksi}', function (Request $request, Response $response, $args) {
+        $idtransaksi = $args['id_transaksi'];
         $parsedBody = $request->getParsedBody();
         
         $idkaryawan = $parsedBody["id_karyawan"];
@@ -574,16 +577,16 @@ return function (App $app) {
 
         $db = $this->get(PDO::class);
         
-        $query = $db->prepare('CALL update_transaksi(?, ?, ?, ?, ?, ?, ?, ?)');
-        $query->bindParam(1, $idkaryawan, PDO::PARAM_INT);
-        $query->bindParam(2, $idpelanggan, PDO::PARAM_INT);
-        $query->bindParam(3, $idpaket, PDO::PARAM_STR);
-        $query->bindParam(4, $tanggalmasuk, PDO::PARAM_STR);
-        $query->bindParam(5, $tanggalkeluar, PDO::PARAM_STR);
-        $query->bindParam(6, $jenisPaket, PDO::PARAM_STR);
-        $query->bindParam(7, $status, PDO::PARAM_STR);
-        $query->bindParam(8, $total, PDO::PARAM_STR);
-    
+        $query = $db->prepare('CALL update_transaksi(?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $query->bindParam(1, $idtransaksi, PDO::PARAM_INT);
+        $query->bindParam(2, $idkaryawan, PDO::PARAM_INT);
+        $query->bindParam(3, $idpelanggan, PDO::PARAM_INT);
+        $query->bindParam(4, $idpaket, PDO::PARAM_STR);
+        $query->bindParam(5, $tanggalmasuk, PDO::PARAM_STR);
+        $query->bindParam(6, $tanggal_keluar, PDO::PARAM_STR);
+        $query->bindParam(7, $jenis_paket, PDO::PARAM_STR);
+        $query->bindParam(8, $status, PDO::PARAM_STR);
+        $query->bindParam(9, $total, PDO::PARAM_STR);
 
         $query->execute();
         
@@ -605,12 +608,12 @@ return function (App $app) {
     });
 
     $app->put('/karyawan/{id_karyawan}', function (Request $request, Response $response, $args) {
-        $parsedBody = $request->getParsedBody();
-         
         $idkaryawan = $args['id_karyawan'];
+        $parsedBody = $request->getParsedBody();
+        
         $idlaundry = $parsedBody['id_laundry'];
         $nama = $parsedBody['nama'];
-        $notelpon = $parsedBody['no_telepon'];
+        $notelpon = $parsedBody['no_telepon']; // Mengubah nama variabel
         $alamat = $parsedBody['alamat'];
 
         $db = $this->get(PDO::class);
@@ -619,10 +622,9 @@ return function (App $app) {
         $query->bindParam(1, $idkaryawan, PDO::PARAM_INT);
         $query->bindParam(2, $idlaundry, PDO::PARAM_INT);
         $query->bindParam(3, $nama, PDO::PARAM_STR);
-        $query->bindParam(4, $notelpon, PDO::PARAM_STR);
+        $query->bindParam(4, $notelpon, PDO::PARAM_STR); // Mengubah nama variabel
         $query->bindParam(5, $alamat, PDO::PARAM_STR);
-     
-  
+
         $query->execute();
         
         if ($query) {
@@ -644,29 +646,30 @@ return function (App $app) {
 
     $app->put('/paket/{id_paket}', function (Request $request, Response $response, $args) {
         $parsedBody = $request->getParsedBody();
-         
+        $idPaket = $args['id_paket'];
+
         $jenisPaket = $parsedBody['jenis_paket'];
         $biaya = $parsedBody['biaya'];
 
         $db = $this->get(PDO::class);
         
-        $query = $db->prepare('CALL update_paket(?, ?)');
-        $query->bindParam(1, $njenisPaket, PDO::PARAM_STR);
-        $query->bindParam(2, $biaya, PDO::PARAM_STR);
-     
-  
+        $query = $db->prepare('CALL update_paket(?, ?, ?)');
+        $query->bindParam(1, $idPaket, PDO::PARAM_INT);
+        $query->bindParam(2, $jenisPaket, PDO::PARAM_STR);
+        $query->bindParam(3, $biaya, PDO::PARAM_STR);
+
         $query->execute();
         
         if ($query) {
             $response->getBody()->write(json_encode(
                 [
-                    'message' => 'paket dengan id ' . $idpaket . ' telah diupdate'
+                    'message' => 'paket dengan id ' . $idPaket . ' telah diupdate'
                 ]
             ));
         } else {
             $response->getBody()->write(json_encode(
                 [
-                    'message' => 'Gagal mengupdate paket dengan id ' . $idpaket
+                    'message' => 'Gagal mengupdate paket dengan id ' . $idPaket
                 ]
             ));
         }
@@ -674,39 +677,42 @@ return function (App $app) {
         return $response->withHeader("Content-Type", "application/json");
     });
 
+
     $app->put('/pelanggan/{id_pelanggan}', function (Request $request, Response $response, $args) {
+        $idPelanggan = $args['id_pelanggan']; // Mengganti nama variabel agar sesuai
         $parsedBody = $request->getParsedBody();
-         
+        
         $nama = $parsedBody['nama'];
         $notelpon = $parsedBody['no_telepon'];
         $alamat = $parsedBody['alamat'];
 
         $db = $this->get(PDO::class);
         
-        $query = $db->prepare('CALL update_pelanggan(?, ?, ?)');
-        $query->bindParam(1, $nama, PDO::PARAM_STR);
-        $query->bindParam(2, $notelpon, PDO::PARAM_STR);
-        $query->bindParam(3, $alamat, PDO::PARAM_STR);
-     
-  
+        $query = $db->prepare('CALL update_pelanggan(?, ?, ?, ?)');
+        $query->bindParam(1, $idPelanggan, PDO::PARAM_INT); // Mengganti parameter pertama dengan tipe INT
+        $query->bindParam(2, $nama, PDO::PARAM_STR);
+        $query->bindParam(3, $notelpon, PDO::PARAM_STR);
+        $query->bindParam(4, $alamat, PDO::PARAM_STR);
+
         $query->execute();
         
         if ($query) {
             $response->getBody()->write(json_encode(
                 [
-                    'message' => 'pelanggan dengan id ' . $idpelanggan . ' telah diupdate'
+                    'message' => 'pelanggan dengan id ' . $idPelanggan . ' telah diupdate' // Mengganti nama variabel
                 ]
             ));
         } else {
             $response->getBody()->write(json_encode(
                 [
-                    'message' => 'Gagal mengupdate pelanggan dengan id ' . $idpelanggan
+                    'message' => 'Gagal mengupdate pelanggan dengan id ' . $idPelanggan // Mengganti nama variabel
                 ]
             ));
         }
         
         return $response->withHeader("Content-Type", "application/json");
     });
+
 
 
         
